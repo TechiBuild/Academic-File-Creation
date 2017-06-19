@@ -12,48 +12,63 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 # ===DEBUGGING SETTINGS===
 
 class AcademicProgram:
-    courses = []
+    course_week = {}  # Holds the course name and weeks in the dictionary type
 
     def add_course(self, widget):  # This method adds the course name and weeks to the table
         coursenameText = self.coursenameField.get_text()
         weeksText = self.weeksField.get_text()
 
-        self.courses.append(coursenameText + ":" + weeksText)
-
+        self.course_week[coursenameText] = weeksText  # Adds coursename as the key and weeks as the value to a dictionary
         logging.debug("\n" + "Added: " + coursenameText + "," + " Weeks: " + str(weeksText))
 
+        self.tree_view(False)
+
     def check_path(self, widget):
-       location_directory = self.browseLocationField.get_text()
+        location_directory = self.browseLocationField.get_text()
 
         if not os.path.exists(location_directory):
             logging.debug('Path not found: ' + location_directory)
             # NEEDS TO BE DIALOG WARNING NO DIR FOUND
         else:
             logging.debug('Path exists: ' + location_directory)
-            self.split_list(location_directory)  # will need to send list of course name and week
+            self.create_folder(location_directory)
 
-    def split_list(self, location_directory):
-        self.subjectList = []
-
-        for split in self.courses:
-            courses = split.split(':')
-            self.subjectList.append(courses[0])
-            week = courses[1]
-            self.create_folder(self.subjectList, week, location_directory)
-
-    def create_folder(self, subject, week, folder):  # Creates the folder for each subject with the inputted week files
-        for courses in subject:
-            path = folder + "\\" + courses
+    def create_folder(self, folder):  # Creates the folder for each subject with the inputted week files
+        for course, week in self.course_week.iteritems():
+            path = folder + "\\" + course
             if not os.path.exists(path):
                 os.makedirs(path)
 
             for weeks in range(1, int(week) + 1):
-                path = folder + "\\" + courses + "\\Week " + str(weeks)
+                path = folder + "\\" + course + "\\Week " + str(weeks)
 
                 if not os.path.exists(path):
                     os.makedirs(path)
-                    logging.debug("Created subfolder for " + courses + " for week " + str(weeks))
-        self.subjectList.pop(0)
+                    logging.debug("Created subfolder for " + course + " for week " + str(weeks))
+
+    def tree_view(self, action):
+
+        self.data_tree = [(a, b) for a, b in self.course_week.iteritems()]
+
+        for item in self.data_tree:
+
+            # for item in self.people_list_store:
+            #     if item in self.people_list_store:
+            #         print("FOUND")
+            print(list(item))
+            self.people_list_store.append(list(item))
+
+        self.people_tree_view = gtk.TreeView(self.people_list_store)
+
+        for i, column_names in enumerate(["Course Name", "Weeks"]):
+            self.render_cell = gtk.CellRendererText()
+
+            self.column = gtk.TreeViewColumn(column_names, self.render_cell, text = i)
+
+            self.people_tree_view.append_column(self.column)
+
+        print(self.data_tree)
+
     def __init__(self):
         # Create a new window
         window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -109,6 +124,27 @@ class AcademicProgram:
         button.connect("clicked", self.check_path)
         fixed.put(button, 125, 290)
         button.show()
+
+        # Tree View
+        self.data_tree = [(a, b) for a, b in self.course_week.iteritems()]
+
+        self.people_list_store = gtk.ListStore(str, str)
+
+        for item in self.data_tree:
+            print(item)
+            self.people_list_store.append(list(item))
+
+        self.people_tree_view = gtk.TreeView(self.people_list_store)
+
+        for i, column_names in enumerate(["Course Name", "Weeks"]):
+            self.render_cell = gtk.CellRendererText()
+
+            self.column = gtk.TreeViewColumn(column_names, self.render_cell, text = i)
+
+            self.people_tree_view.append_column(self.column)
+
+        fixed.put(self.people_tree_view, 300, 40)
+        self.people_tree_view.show()
 
         # Display the window
         window.show()
