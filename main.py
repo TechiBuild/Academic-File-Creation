@@ -13,6 +13,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 class AcademicProgram:
     course_week = {}  # Holds the course name and weeks in the dictionary type
+    checker = []
 
     def add_course(self, widget):  # This method adds the course name and weeks to the table
         coursenameText = self.coursenameField.get_text()
@@ -22,6 +23,7 @@ class AcademicProgram:
         logging.debug("\n" + "Added: " + coursenameText + "," + " Weeks: " + str(weeksText))
 
         self.tree_view(False)
+        self.checker.append(coursenameText)
 
     def check_path(self, widget):
         location_directory = self.browseLocationField.get_text()
@@ -48,26 +50,28 @@ class AcademicProgram:
 
     def tree_view(self, action):
 
-        self.data_tree = [(a, b) for a, b in self.course_week.iteritems()]
+        for a, b in self.course_week.iteritems():
+            if a in self.checker:
+                print("Course name already exists")
+            else:
+                self.course_week_list_store.clear()
+                self.data_tree = [(a, b) for a, b in self.course_week.iteritems()]
 
-        for item in self.data_tree:
+                for item in self.data_tree:
+                    self.course_week_list_store.append(list(item))
+                    self.course_week_tree_view = gtk.TreeView(self.course_week_list_store)
 
-            # for item in self.people_list_store:
-            #     if item in self.people_list_store:
-            #         print("FOUND")
-            print(list(item))
-            self.people_list_store.append(list(item))
+                    for i, column_names in enumerate(["Course Name", "Weeks"]):
+                        self.render_cell = gtk.CellRendererText()
 
-        self.people_tree_view = gtk.TreeView(self.people_list_store)
+                        self.column = gtk.TreeViewColumn(column_names, self.render_cell, text=i)
 
-        for i, column_names in enumerate(["Course Name", "Weeks"]):
-            self.render_cell = gtk.CellRendererText()
+                        self.course_week_tree_view.append_column(self.column)
 
-            self.column = gtk.TreeViewColumn(column_names, self.render_cell, text = i)
+                    print(self.data_tree)
 
-            self.people_tree_view.append_column(self.column)
-
-        print(self.data_tree)
+    def setup_tree_view(self):
+        pass
 
     def __init__(self):
         # Create a new window
@@ -79,6 +83,21 @@ class AcademicProgram:
         fixed = gtk.Fixed()
         window.add(fixed)
         fixed.show()
+
+        # Tree View
+        self.data_tree = ()
+        self.course_week_list_store = gtk.ListStore(str, str)
+        self.course_week_tree_view = gtk.TreeView(self.course_week_list_store)
+
+        for i, column_names in enumerate(["Course Name", "Weeks"]):
+            self.render_cell = gtk.CellRendererText()
+
+            self.column = gtk.TreeViewColumn(column_names, self.render_cell, text=i)
+
+            self.course_week_tree_view.append_column(self.column)
+
+        fixed.put(self.course_week_tree_view, 300, 40)
+        self.course_week_tree_view.show()
 
         # Course Name Label
         coursenameLabel = gtk.Label(str)
@@ -124,27 +143,6 @@ class AcademicProgram:
         button.connect("clicked", self.check_path)
         fixed.put(button, 125, 290)
         button.show()
-
-        # Tree View
-        self.data_tree = [(a, b) for a, b in self.course_week.iteritems()]
-
-        self.people_list_store = gtk.ListStore(str, str)
-
-        for item in self.data_tree:
-            print(item)
-            self.people_list_store.append(list(item))
-
-        self.people_tree_view = gtk.TreeView(self.people_list_store)
-
-        for i, column_names in enumerate(["Course Name", "Weeks"]):
-            self.render_cell = gtk.CellRendererText()
-
-            self.column = gtk.TreeViewColumn(column_names, self.render_cell, text = i)
-
-            self.people_tree_view.append_column(self.column)
-
-        fixed.put(self.people_tree_view, 300, 40)
-        self.people_tree_view.show()
 
         # Display the window
         window.show()
