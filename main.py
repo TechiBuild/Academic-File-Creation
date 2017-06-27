@@ -25,15 +25,32 @@ class AcademicProgram:
         self.tree_view(False)
         self.checker.append(coursenameText)
 
-    def check_path(self, widget):
-        location_directory = self.browseLocationField.get_text()
+    def grab_path(self, widget):
+        path_dialog = gtk.FileChooserDialog("Open..",
+                                       None,
+                                       gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                       (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                        gtk.STOCK_OPEN, gtk.RESPONSE_OK))
 
-        if not os.path.exists(location_directory):
-            logging.debug('Path not found: ' + location_directory)
+        path_dialog.set_default_response(gtk.RESPONSE_OK)
+        response = path_dialog.run()
+
+        if response == gtk.RESPONSE_OK:
+            print path_dialog.get_filename(), 'selected'
+            self.browseLocationLabel.set_text(path_dialog.get_filename())
+            self.location_directory = path_dialog.get_filename()
+            path_dialog.destroy()
+
+        elif response == gtk.RESPONSE_CANCEL:
+            path_dialog.destroy()
+
+    def check_path(self, widget):
+        if not os.path.exists(self.location_directory):
+            logging.debug('Path not found: ' + self.location_directory)
             # NEEDS TO BE DIALOG WARNING NO DIR FOUND
         else:
-            logging.debug('Path exists: ' + location_directory)
-            self.create_folder(location_directory)
+            logging.debug('Path exists: ' + self.location_directory)
+            self.create_folder(self.location_directory)
 
     def create_folder(self, folder):  # Creates the folder for each subject with the inputted week files
         for course, week in self.course_week.iteritems():
@@ -50,7 +67,7 @@ class AcademicProgram:
 
     def tree_view(self, action):
 
-        for a, b in self.course_week.iteritems():
+        for a in self.course_week.iteritems():
             if a in self.checker:
                 print("Course name already exists")
             else:
@@ -69,9 +86,6 @@ class AcademicProgram:
                         self.course_week_tree_view.append_column(self.column)
 
                     print(self.data_tree)
-
-    def setup_tree_view(self):
-        pass
 
     def __init__(self):
         # Create a new window
@@ -122,27 +136,28 @@ class AcademicProgram:
         self.weeksField.show()
 
         # Add Button
-        button = gtk.Button("Add")
-        button.connect("clicked", self.add_course)
-        fixed.put(button, 178, 140)
-        button.show()
-
-        # Browse Location Text Field
-        self.browseLocationField = gtk.Entry(max=0)
-        fixed.put(self.browseLocationField, 50, 250)
-        self.browseLocationField.show()
+        add_button = gtk.Button("Add")
+        add_button.connect("clicked", self.add_course)
+        fixed.put(add_button, 50, 140)
+        add_button.show()
 
         # Browse Location Label
-        weeksLabel = gtk.Label(str)
-        fixed.put(weeksLabel, 50, 230)
-        weeksLabel.set_text("File Creation Location")
-        weeksLabel.show()
+        self.browseLocationLabel = gtk.Label(str)
+        fixed.put(self.browseLocationLabel, 50, 230)
+        self.browseLocationLabel.set_text("")
+        self.browseLocationLabel.show()
 
         # Create Button
-        button = gtk.Button("Create Folders")
-        button.connect("clicked", self.check_path)
-        fixed.put(button, 125, 290)
-        button.show()
+        folder_button = gtk.Button("Select Folder Location")
+        folder_button.connect("clicked", self.grab_path)
+        fixed.put(folder_button, 50, 200)
+        folder_button.show()
+
+        # Create Button
+        create_button = gtk.Button("Create Folders")
+        create_button.connect("clicked", self.check_path)
+        fixed.put(create_button, 50, 290)
+        create_button.show()
 
         # Display the window
         window.show()
